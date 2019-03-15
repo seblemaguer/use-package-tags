@@ -41,6 +41,9 @@
 (defconst use-package-tags-not-symbol "!"
   "Symbol to indicate that the host have to not install the dedicate tag")
 
+(defconst use-package-tags-default-host "DEFAULT"
+  "Default hostname to define baseline tags")
+
 ;; Define some machine name identifiers
 (defvar use-package-tags-enabled '()
   "Association list to associate a list of tags (strings) to a
@@ -58,7 +61,10 @@
  installation. Returns t if TAGS is nil or the list of tags
  associated to the current machine hostname is nil. Else, it
  returns the intersection between the two lists of tags."
-  (let* ((list-tags-cur-host (alist-get (system-name) use-package-tags-enabled nil nil 'string=))
+  (let* ((list-tags-cur-host (alist-get (system-name) use-package-tags-enabled
+                                        (alist-get use-package-tags-default-host use-package-tags-enabled
+                                                   nil nil 'string=)
+                                        nil 'string=))
 	 (rejected-tags (seq-map (lambda (elt) (substring elt 1))
 				 (seq-filter (lambda (elt) (string-prefix-p use-package-tags-not-symbol elt))
 					     list-tags-cur-host)))
