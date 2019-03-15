@@ -35,6 +35,12 @@
 (require 'dash)
 (require 'seq)
 
+(defconst use-package-tags-all-tag "ALL"
+  "Joker tag to indicate that the host is going to install everything!")
+
+(defconst use-package-tags-not-symbol "!"
+  "Symbol to indicate that the host have to not install the dedicate tag")
+
 ;; Define some machine name identifiers
 (defvar use-package-tags-enabled '()
   "Association list to associate a list of tags (strings) to a
@@ -54,17 +60,16 @@
  returns the intersection between the two lists of tags."
   (let* ((list-tags-cur-host (alist-get (system-name) use-package-tags-enabled nil nil 'string=))
 	 (rejected-tags (seq-map (lambda (elt) (substring elt 1))
-				 (seq-filter (lambda (elt) (string-prefix-p "!" elt))
-					     list-tags-cur-host))) ;; FIXME: hardcoded
-	 (accepted-tags (seq-filter (lambda (elt) (not (string-prefix-p "!" elt)))
-				    list-tags-cur-host))) ;; FIXME: hardcoded
-
+				 (seq-filter (lambda (elt) (string-prefix-p use-package-tags-not-symbol elt))
+					     list-tags-cur-host)))
+	 (accepted-tags (seq-filter (lambda (elt) (not (string-prefix-p use-package-tags-not-symbol elt)))
+				    list-tags-cur-host)))
     (if (null list-tags-cur-host)
 	t
       (if (-intersection rejected-tags tags)
           nil
         (cond
-         ((member "ALL" accepted-tags) t) ;; FIXME: hard coded
+         ((member use-package-tags-all-tag accepted-tags) t)
          ((null accepted-tags) t)
          (t (-intersection accepted-tags tags)))))))
 
@@ -78,9 +83,9 @@
 ;; 3. define hangler
 ;;;###autoload
 (defun use-package-handler/:tags (name _keyword arg rest state)
-    "Execute the handler for `:tags' keyword in `use-package'."
-    (let ((body (use-package-process-keywords name rest state)))
-      `((when (use-package-tags-validate-tags ,arg) ,@body))))
+  "Execute the handler for `:tags' keyword in `use-package'."
+  (let ((body (use-package-process-keywords name rest state)))
+    `((when (use-package-tags-validate-tags ,arg) ,@body))))
 
 (provide 'use-package-tags)
 
