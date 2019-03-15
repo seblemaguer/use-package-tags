@@ -33,6 +33,7 @@
 
 (require 'use-package-core)
 (require 'dash)
+(require 'seq)
 
 ;; Define some machine name identifiers
 (defvar use-package-tags-enabled '()
@@ -51,10 +52,21 @@
  installation. Returns t if TAGS is nil or the list of tags
  associated to the current machine hostname is nil. Else, it
  returns the intersection between the two lists of tags."
-  (let* ((list-tags-cur-host (alist-get (system-name) use-package-tags-enabled nil nil 'string=)))
-    (cond ((null list-tags-cur-host) t)
-          ((null tags) t)
-          (t (-intersection list-tags-cur-host tags)))))
+  (let* ((list-tags-cur-host (alist-get (system-name) use-package-tags-enabled nil nil 'string=))
+	 (rejected-tags (seq-map (lambda (elt) (substring elt 1))
+				 (seq-filter (lambda (elt) (string-prefix-p "!" elt))
+					     list-tags-cur-host))) ;; FIXME: hardcoded
+	 (accepted-tags (seq-filter (lambda (elt) (not (string-prefix-p "!" elt)))
+				    list-tags-cur-host))) ;; FIXME: hardcoded
+
+    (if (null list-tags-cur-host)
+	t
+      (if (-intersection rejected-tags tags)
+          nil
+        (cond
+         ((member "ALL" accepted-tags) t) ;; FIXME: hard coded
+         ((null accepted-tags) t)
+         (t (-intersection accepted-tags tags)))))))
 
 ;; 1. add keyword (first position as it needs to be before ensuring of the package)
 (push :tags use-package-keywords)
