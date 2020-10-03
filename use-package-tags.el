@@ -8,7 +8,7 @@
 ;; Created: 03 Mar 2019
 ;; Modified: 03 Mar 2019
 ;; Version: 1.0
-;; Package-Requires: ((use-package "2.4") (dash "2.15.0"))
+;; Package-Requires: ((use-package "2.4") (dash "2.15.0") (seq "2.2"))
 ;; Keywords: dotemacs startup package tags
 ;; URL: https://github.com/jwiegley/use-package
 
