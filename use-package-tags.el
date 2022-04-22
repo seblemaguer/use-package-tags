@@ -44,6 +44,9 @@
 (defconst use-package-tags-default-host "DEFAULT"
   "Default hostname to define baseline tags")
 
+(defvar use-package-tags-default-tag-list '()
+  "Default list of tags to apply")
+
 ;; Define some machine name identifiers
 (defvar use-package-tags-enabled '()
   "Association list to associate a list of tags (strings) to a
@@ -62,16 +65,35 @@
  associated to the current machine hostname is nil. Else, it
  returns the intersection between the two lists of tags."
   (let* ((list-tags-cur-host (alist-get (system-name) use-package-tags-enabled
-                                        (alist-get use-package-tags-default-host use-package-tags-enabled
+                                        (alist-get use-package-tags-default-host
+                                                   use-package-tags-enabled
                                                    nil nil 'string=)
                                         nil 'string=))
-	 (rejected-tags (seq-map (lambda (elt) (substring elt 1))
-				 (seq-filter (lambda (elt) (string-prefix-p use-package-tags-not-symbol elt))
-					     list-tags-cur-host)))
-	 (accepted-tags (seq-filter (lambda (elt) (not (string-prefix-p use-package-tags-not-symbol elt)))
-				    list-tags-cur-host)))
+	     (rejected-tags (seq-map (lambda (elt)
+                                   (substring elt 1))
+				                 (seq-filter (lambda (elt)
+                                               (string-prefix-p use-package-tags-not-symbol elt))
+					                         list-tags-cur-host)))
+	     (accepted-tags (seq-filter (lambda (elt)
+                                      (not (string-prefix-p use-package-tags-not-symbol elt)))
+				                    list-tags-cur-host)))
+
+    ;; Add the default tag list
+    (when use-package-tags-default-tag-list
+      (setq rejected-tags (append rejected-tags
+                                  (seq-map (lambda (elt)
+                                             (substring elt 1))
+				                           (seq-filter (lambda (elt)
+                                                         (string-prefix-p use-package-tags-not-symbol elt))
+					                                   use-package-tags-default-tag-list))))
+
+      (setq accepted-tags (append accepted-tags
+                                  (seq-filter (lambda (elt)
+                                                (not (string-prefix-p use-package-tags-not-symbol elt)))
+				                              use-package-tags-default-tag-list))))
+
     (if (null list-tags-cur-host)
-	t
+	    t
       (if (-intersection rejected-tags tags)
           nil
         (cond
